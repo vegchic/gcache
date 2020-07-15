@@ -94,10 +94,9 @@ func (c *SimpleCache) Get(key interface{}) (interface{}, error) {
 	if err == KeyNotFoundError {
 		return c.getWithLoader(key, true)
 	} else if err == KeyExpireError {
-		go c.getWithLoader(key, true)
-		return v, nil
+		c.getWithLoader(key, false)
 	}
-	return v, err
+	return v, nil
 }
 
 // GetIFPresent gets a value from cache pool using key if it exists.
@@ -108,15 +107,14 @@ func (c *SimpleCache) GetIFPresent(key interface{}) (interface{}, error) {
 	if err == KeyNotFoundError {
 		return c.getWithLoader(key, false)
 	} else if err == KeyExpireError {
-		go c.getWithLoader(key, false)
-		return v, nil
+		c.getWithLoader(key, false)
 	}
 	return v, nil
 }
 
 func (c *SimpleCache) get(key interface{}, onLoad bool) (interface{}, error) {
 	v, err := c.getValue(key, onLoad)
-	if err == KeyNotFoundError {
+	if err == KeyNotFoundError || (onLoad && err == KeyExpireError) {
 		return nil, err
 	}
 	if c.deserializeFunc != nil {

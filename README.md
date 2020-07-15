@@ -14,7 +14,7 @@ Cache library for golang. It supports expirable Cache, LFU, LRU and ARC.
 
 * Automatically load cache if it doesn't exists. (Optional)
 
-* 特供版：simple cache 支持异步 loader，通过 `LoaderExpireFunc(fn, true)` 开启
+* 特供版：simple cache 支持异步 loader，通过 `LoaderExpireFunc(fn, true)` 开启，过期时会返回过期值并异步调用 loader
 
 ## Install
 

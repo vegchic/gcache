@@ -326,7 +326,7 @@ func TestSimpleAsyncLoad(t *testing.T)  {
 			}()
 		}
 
-		time.Sleep(50*time.Millisecond)
+		time.Sleep(10*time.Millisecond)
 		for i := 0; i < counter; i++ {
 			wg.Add(1)
 			go func() {
@@ -341,12 +341,25 @@ func TestSimpleAsyncLoad(t *testing.T)  {
 			}()
 		}
 		wg.Wait()
-
 		if testCounter != 1 {
 			t.Errorf("testCounter != %v", testCounter)
 		}
 
 		time.Sleep(10*time.Millisecond)
+		for i := 0; i < counter; i++ {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				v, err := cache.Get(0)
+				if v.(int64) != 2 {
+					t.Errorf("Incorrect value: %v", v)
+				}
+				if err != nil {
+					t.Error(err)
+				}
+			}()
+		}
+
 		if testCounter != 2 {
 			t.Errorf("testCounter != %v", testCounter)
 		}
