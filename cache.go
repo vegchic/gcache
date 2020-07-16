@@ -36,7 +36,7 @@ type Cache interface {
 type baseCache struct {
 	clock            Clock
 	size             int
-	asyncLoad		 bool
+	asyncLoad        bool
 	loaderExpireFunc LoaderExpireFunc
 	evictedFunc      EvictedFunc
 	purgeVisitorFunc PurgeVisitorFunc
@@ -57,13 +57,14 @@ type (
 	AddedFunc        func(interface{}, interface{})
 	DeserializeFunc  func(interface{}, interface{}) (interface{}, error)
 	SerializeFunc    func(interface{}, interface{}) (interface{}, error)
+	MetricsFunc      func(uint64, int64)
 )
 
 type CacheBuilder struct {
 	clock            Clock
 	tp               string
 	size             int
-	asyncLoad		 bool
+	asyncLoad        bool
 	loaderExpireFunc LoaderExpireFunc
 	evictedFunc      EvictedFunc
 	purgeVisitorFunc PurgeVisitorFunc
@@ -71,6 +72,11 @@ type CacheBuilder struct {
 	expiration       *time.Duration
 	deserializeFunc  DeserializeFunc
 	serializeFunc    SerializeFunc
+
+	// MetricsFunc accept new count value and increment, which is always 1
+	hitMetrics    MetricsFunc
+	missMetrics   MetricsFunc
+	expireMetrics MetricsFunc
 }
 
 func New(size int) *CacheBuilder {
@@ -156,6 +162,22 @@ func (cb *CacheBuilder) Expiration(expiration time.Duration) *CacheBuilder {
 	return cb
 }
 
+func (cb *CacheBuilder) HitMetricsFunc(hitMetrics MetricsFunc) *CacheBuilder {
+	cb.hitMetrics = hitMetrics
+	return cb
+}
+
+func (cb *CacheBuilder) MissMetricsFunc(missMetrics MetricsFunc) *CacheBuilder {
+	cb.missMetrics = missMetrics
+	return cb
+}
+
+// expireFunc only execute when asyncLoad is on and hit the expired value
+func (cb *CacheBuilder) ExpireMetricsFunc(expireMetrics MetricsFunc) *CacheBuilder {
+	cb.expireMetrics = expireMetrics
+	return cb
+}
+
 func (cb *CacheBuilder) Build() Cache {
 	if cb.tp != TYPE_SIMPLE {
 		if cb.size <= 0 {
@@ -194,7 +216,11 @@ func buildCache(c *baseCache, cb *CacheBuilder) {
 	c.serializeFunc = cb.serializeFunc
 	c.evictedFunc = cb.evictedFunc
 	c.purgeVisitorFunc = cb.purgeVisitorFunc
-	c.stats = &stats{}
+	c.stats = &stats{
+		hitMetrics:    cb.hitMetrics,
+		missMetrics:   cb.missMetrics,
+		expireMetrics: cb.expireMetrics,
+	}
 }
 
 // load a new value using by specified key.

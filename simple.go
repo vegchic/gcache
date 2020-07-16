@@ -147,7 +147,11 @@ func (c *SimpleCache) getValue(key interface{}, onLoad bool) (v interface{}, err
 	}
 	c.mu.Unlock()
 	if !onLoad {
-		c.stats.IncrMissCount()
+		if err == KeyNotFoundError {
+			c.stats.IncrMissCount()
+		} else if err == KeyExpireError {
+			c.stats.IncrExpireCount()
+		}
 	}
 	return
 }

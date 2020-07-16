@@ -280,10 +280,10 @@ func TestExpiredItems(t *testing.T) {
 	}
 }
 
-func TestSimpleAsyncLoad(t *testing.T)  {
+func TestSimpleAsyncLoad(t *testing.T) {
 	size := 2
 	var testCaches = []*CacheBuilder{
-		New(size).Simple(),	// only support simple
+		New(size).Simple(), // only support simple
 	}
 	for _, builder := range testCaches {
 		var testCounter int64
@@ -291,7 +291,7 @@ func TestSimpleAsyncLoad(t *testing.T)  {
 		expire := 200 * time.Millisecond
 		cache := builder.
 			LoaderExpireFunc(func(key interface{}) (interface{}, *time.Duration, error) {
-				time.Sleep(10*time.Millisecond)
+				time.Sleep(10 * time.Millisecond)
 				return atomic.AddInt64(&testCounter, 1), &expire, nil
 			}, true).
 			Build()
@@ -326,7 +326,7 @@ func TestSimpleAsyncLoad(t *testing.T)  {
 			}()
 		}
 
-		time.Sleep(10*time.Millisecond)
+		time.Sleep(10 * time.Millisecond)
 		for i := 0; i < counter; i++ {
 			wg.Add(1)
 			go func() {
@@ -345,7 +345,7 @@ func TestSimpleAsyncLoad(t *testing.T)  {
 			t.Errorf("testCounter != %v", testCounter)
 		}
 
-		time.Sleep(10*time.Millisecond)
+		time.Sleep(10 * time.Millisecond)
 		for i := 0; i < counter; i++ {
 			wg.Add(1)
 			go func() {
